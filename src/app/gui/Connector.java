@@ -2,7 +2,13 @@ package app.gui;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.HashSet;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JDialog;
@@ -15,6 +21,8 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 import app.lib.connector.ConnectionStringBuilder;
 
@@ -26,7 +34,8 @@ import java.awt.event.ItemEvent;
 public class Connector extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
-	private JTextField txtServer;
+	private final HashSet<String> hosts = new HashSet<String>();
+	private JComboBox txtServer;
 	private JTextField txtUserName;
 	private JTextField txtPort;
 	private JPasswordField txtPassword;
@@ -39,7 +48,7 @@ public class Connector extends JDialog {
 	 * Create the dialog.
 	 */
 	public Connector(JFrame parent) {
-		super(parent,"Conexión",true);
+		super(parent, "Conexión", true);
 		this.configured = false;
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -63,8 +72,11 @@ public class Connector extends JDialog {
 		}
 		{
 			txtServer = new JTextField();
+			this.loadKnownHosts();
+			txtServer = new JComboBox();
+			txtServer.setModel(new DefaultComboBoxModel(this.hosts.toArray()));
+			txtServer.setEditable(true);
 			txtServer.setToolTipText("Servidor");
-			txtServer.setColumns(10);
 		}
 		{
 			chckboxEncrypt = new JCheckBox("Conexión encriptada");
@@ -110,62 +122,55 @@ public class Connector extends JDialog {
 						.addGroup(gl_contentPanel.createSequentialGroup()
 							.addComponent(this.chckboxIS)
 							.addContainerGap())
+						  gl_contentPanel.setHorizontalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_contentPanel.createSequentialGroup().addGap(28).addGroup(gl_contentPanel
+						.createParallelGroup(Alignment.LEADING)
+						.addGroup(
+								gl_contentPanel.createSequentialGroup().addComponent(this.chckboxIS).addContainerGap())
 						.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-							.addGroup(gl_contentPanel.createSequentialGroup()
-								.addComponent(lblNewLabel_1)
-								.addContainerGap())
-							.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-								.addGroup(gl_contentPanel.createSequentialGroup()
-									.addComponent(txtUserName, 238, 238, 238)
-									.addContainerGap())
-								.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-									.addGroup(gl_contentPanel.createSequentialGroup()
-										.addComponent(lblNewLabel_2)
+							  .addGroup(gl_contentPanel.createSequentialGroup().addComponent(lblNewLabel_1)
 										.addContainerGap())
 									.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
 										.addGroup(gl_contentPanel.createSequentialGroup()
-											.addComponent(txtPassword, 238, 238, 238)
-											.addContainerGap())
-										.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-											.addGroup(gl_contentPanel.createSequentialGroup()
-												.addComponent(chckboxPort)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(txtPort, GroupLayout.DEFAULT_SIZE, 65, Short.MAX_VALUE)
-												.addGap(24))
-											.addGroup(gl_contentPanel.createSequentialGroup()
-												.addComponent(chckboxEncrypt)
-												.addContainerGap())
-											.addGroup(gl_contentPanel.createSequentialGroup()
+														.addComponent(lblNewLabel_2).addContainerGap())
 												.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-													.addComponent(txtServer, 238, 238, 238)
-													.addComponent(lblNewLabel))
-												.addGap(24)))))))))
-		);
-		gl_contentPanel.setVerticalGroup(
-			gl_contentPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_contentPanel.createSequentialGroup()
-					.addGap(17)
-					.addComponent(lblNewLabel)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(txtServer, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(this.chckboxIS)
-					.addPreferredGap(ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
-					.addComponent(lblNewLabel_1)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(txtUserName, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(lblNewLabel_2)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(txtPassword, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE)
-						.addComponent(chckboxPort)
-						.addComponent(txtPort, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(chckboxEncrypt)
-					.addGap(28))
-		);
+													.addGroup(gl_contentPanel.createSequentialGroup()
+																.addComponent(txtPassword, 238, 238, 238)
+																.addContainerGap())
+														.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+																.addGroup(gl_contentPanel.createSequentialGroup()
+																		.addComponent(chckboxPort)
+																		.addPreferredGap(ComponentPlacement.UNRELATED)
+																		.addComponent(txtPort, GroupLayout.DEFAULT_SIZE,
+																				65, Short.MAX_VALUE)
+																		.addGap(24))
+																.addGroup(gl_contentPanel.createSequentialGroup()
+																		.addComponent(chckboxEncrypt).addContainerGap())
+																.addGroup(gl_contentPanel.createSequentialGroup()
+																		.addGroup(gl_contentPanel
+																				.createParallelGroup(Alignment.LEADING)
+																				.addComponent(txtServer, 238, 238, 238)
+																				.addComponent(lblNewLabel))
+																		.addGap(24))))))))));
+		gl_contentPanel.setVerticalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPanel
+				.createSequentialGroup().addGap(17).addComponent(lblNewLabel)
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addComponent(txtServer, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+						GroupLayout.PREFERRED_SIZE)
+				.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(this.chckboxIS)
+				.addPreferredGap(ComponentPlacement.RELATED, 16, Short.MAX_VALUE).addComponent(lblNewLabel_1)
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addComponent(txtUserName, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+						GroupLayout.PREFERRED_SIZE)
+				.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(lblNewLabel_2)
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addComponent(
+						txtPassword, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+				.addPreferredGap(ComponentPlacement.UNRELATED)
+				.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE).addComponent(chckboxPort)
+						.addComponent(txtPort, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE))
+				.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(chckboxEncrypt).addGap(28)));
 		contentPanel.setLayout(gl_contentPanel);
 		{
 			JPanel buttonPane = new JPanel();
@@ -198,17 +203,62 @@ public class Connector extends JDialog {
 	}
 	
 	public ConnectionStringBuilder getConnectionStringBuilder() {
-		return new ConnectionStringBuilder()
-				.withHost(this.txtServer.getText().strip())
+		String host = (this.txtServer.getSelectedItem() != null)? this.txtServer.getSelectedItem().toString().strip() : "";
+		return new ConnectionStringBuilder().withHost(host)
 				.withDbName("master")
-				.withIntegratedSecurity(this.chckboxIS.isSelected())
 				.withUserName(this.txtUserName.getText().strip())
 				.withPassword(new String(this.txtPassword.getPassword()).strip())
+				.withIntegratedSecurity(this.chckboxIS.isSelected())
 				.withPort(Integer.parseInt(this.txtPort.getText().strip()))
 				.withEncrypt(this.chckboxEncrypt.isSelected())
 				.withTrustServerCertificates(true);
 	}
-	
+	private void loadKnownHosts() {
+		String localAppDataPath = System.getenv("LOCALAPPDATA");
+		String filePath = Path.of(localAppDataPath, "Proyecto-DBMS", "known_hosts").toAbsolutePath().toString();
+		String dirPath = Path.of(localAppDataPath, "Proyecto-DBMS").toAbsolutePath().toString();
+
+		try {
+			File dir = new File(dirPath);
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
+
+			File file = new File(filePath);
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+
+		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				this.hosts.add(line);
+			}
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	private void saveKnownHosts() {
+		if (this.txtServer.getSelectedItem() == null) {
+			return;
+		}
+
+		this.hosts.add(this.txtServer.getSelectedItem().toString().strip());
+		String localAppDataPath = System.getenv("LOCALAPPDATA");
+		String filePath = Path.of(localAppDataPath, "Proyecto-DBMS", "known_hosts").toAbsolutePath().toString();
+
+		try (FileWriter writer = new FileWriter(filePath)) {
+			String content = String.join("\n", hosts);
+			writer.write(content);
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
 	public boolean isConfigured() {
 		return this.configured;
 	}
