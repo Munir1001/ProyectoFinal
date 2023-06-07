@@ -71,7 +71,6 @@ public class Connector extends JDialog {
 			txtUserName.setColumns(10);
 		}
 		{
-			txtServer = new JTextField();
 			this.loadKnownHosts();
 			txtServer = new JComboBox();
 			txtServer.setModel(new DefaultComboBoxModel(this.hosts.toArray()));
@@ -114,27 +113,22 @@ public class Connector extends JDialog {
 		JLabel lblNewLabel_2 = new JLabel("Contraseña");
 		
 		GroupLayout gl_contentPanel = new GroupLayout(contentPanel);
-		gl_contentPanel.setHorizontalGroup(
-			gl_contentPanel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_contentPanel.createSequentialGroup()
-					.addGap(28)
-					.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_contentPanel.createSequentialGroup()
-							.addComponent(this.chckboxIS)
-							.addContainerGap()
 						  gl_contentPanel.setHorizontalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPanel.createSequentialGroup().addGap(28).addGroup(gl_contentPanel
 						.createParallelGroup(Alignment.LEADING)
 						.addGroup(
 								gl_contentPanel.createSequentialGroup().addComponent(this.chckboxIS).addContainerGap())
 						.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-							  .addGroup(gl_contentPanel.createSequentialGroup().addComponent(lblNewLabel_1)
-										.addContainerGap())
-									.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPanel.createSequentialGroup()
-														.addComponent(lblNewLabel_2).addContainerGap())
 												.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
-													.addGroup(gl_contentPanel.createSequentialGroup()
+													  .addGroup(gl_contentPanel.createSequentialGroup().addComponent(lblNewLabel_1)
+										.addContainerGap())
+													.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+																.addGroup(gl_contentPanel.createSequentialGroup()
+																	  .addComponent(txtUserName, 238, 238, 238).addContainerGap())
+														  .addGroup(gl_contentPanel.createSequentialGroup()
+														.addComponent(lblNewLabel_2).addContainerGap())
+																		.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
+		.addGroup(gl_contentPanel.createSequentialGroup()
 																.addComponent(txtPassword, 238, 238, 238)
 																.addContainerGap())
 														.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
@@ -151,7 +145,7 @@ public class Connector extends JDialog {
 																				.createParallelGroup(Alignment.LEADING)
 																				.addComponent(txtServer, 238, 238, 238)
 																				.addComponent(lblNewLabel))
-																		.addGap(24)))))))));
+																		.addGap(24))))))))));
 		gl_contentPanel.setVerticalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPanel
 				.createSequentialGroup().addGap(17).addComponent(lblNewLabel)
 				.addPreferredGap(ComponentPlacement.RELATED)
@@ -170,8 +164,8 @@ public class Connector extends JDialog {
 				.addGroup(gl_contentPanel.createParallelGroup(Alignment.BASELINE).addComponent(chckboxPort)
 						.addComponent(txtPort, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
 								GroupLayout.PREFERRED_SIZE))
-				.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(chckboxEncrypt).addGap(28)));
-		contentPanel.setLayout(gl_contentPanel);
+				.addPreferredGap(ComponentPlacement.UNRELATED).addComponent(chckboxEncrypt).addGap(28)))
+	contentPanel.setLayout(gl_contentPanel);
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -180,6 +174,7 @@ public class Connector extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
+						saveKnownHosts();
 						configured = true;
 						dispose();
 					}
@@ -201,7 +196,6 @@ public class Connector extends JDialog {
 			}
 		}
 	}
-	
 	public ConnectionStringBuilder getConnectionStringBuilder() {
 		String host = (this.txtServer.getSelectedItem() != null)? this.txtServer.getSelectedItem().toString().strip() : "";
 		return new ConnectionStringBuilder().withHost(host)
@@ -258,8 +252,3 @@ public class Connector extends JDialog {
 			System.out.println(e.getMessage());
 		}
 	}
-
-	public boolean isConfigured() {
-		return this.configured;
-	}
-}
