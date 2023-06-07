@@ -121,7 +121,7 @@ public class Connector extends JDialog {
 					.addGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_contentPanel.createSequentialGroup()
 							.addComponent(this.chckboxIS)
-							.addContainerGap())
+							.addContainerGap()
 						  gl_contentPanel.setHorizontalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_contentPanel.createSequentialGroup().addGap(28).addGroup(gl_contentPanel
 						.createParallelGroup(Alignment.LEADING)
@@ -151,7 +151,7 @@ public class Connector extends JDialog {
 																				.createParallelGroup(Alignment.LEADING)
 																				.addComponent(txtServer, 238, 238, 238)
 																				.addComponent(lblNewLabel))
-																		.addGap(24))))))))));
+																		.addGap(24)))))))));
 		gl_contentPanel.setVerticalGroup(gl_contentPanel.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPanel
 				.createSequentialGroup().addGap(17).addComponent(lblNewLabel)
 				.addPreferredGap(ComponentPlacement.RELATED)
