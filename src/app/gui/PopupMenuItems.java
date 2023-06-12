@@ -46,8 +46,21 @@ public class PopupMenuItems {
 		
 	}
 	
-	
-	public static void fillRootPopupMenu(JPopupMenu popupMenu, Main parent) {
+	private static JMenuItem createUsersItem(Main parent, String databaseName) {
+		JMenuItem menuItem = new JMenuItem("Nuevo usuario");
+		menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+            	if (databaseName == null) {
+            		parent.getTabs().createNewUserTab(parent.getConnectionStringBuilder().copy(),"");
+            	} else {
+            		parent.getTabs().createNewUserTab(parent.getConnectionStringBuilder().copy().withDbName(databaseName),"");
+            	}
+            }
+		});
+		return menuItem;
+	}
+
+	private static JMenuItem createNewDatabaseItem(Main parent) {
 		JMenuItem menuItem = new JMenuItem("Crear nueva base de datos");
 		menuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
@@ -67,7 +80,7 @@ public class PopupMenuItems {
 					return;
 				}
 				
-				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().build())) {
+				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().copy().withDbName("master").build())) {
 					parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					var result = sqlOperation.executeRaw(String.format(DefaultQuerys.createDatabaseQuery, databaseName));
 					parent.getResultReader().loadResult(result);
@@ -82,7 +95,13 @@ public class PopupMenuItems {
             }
         });
 		
-	    popupMenu.add(menuItem);
+		return menuItem;
+	}
+	
+	
+	public static void fillRootPopupMenu(JPopupMenu popupMenu, Main parent) {
+		
+	    popupMenu.add(createNewDatabaseItem(parent));
 	    popupMenu.add(createQueryItem(parent,"master"));
 	}
 	
