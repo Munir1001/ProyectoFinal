@@ -109,8 +109,7 @@ public class PopupMenuItems {
 		JMenuItem menuItem1 = new JMenuItem("Eliminar Base de datos");
 		menuItem1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-            	parent.setDbName("master");
-				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().build())) {
+				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().copy().withDbName("master").build())) {
 					parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					var query = Drop.database(database).generateQuery();
 					var result = sqlOperation.executeRaw(query);
@@ -133,7 +132,7 @@ public class PopupMenuItems {
 		JMenuItem menuItem1 = new JMenuItem("Seleccionar los primeros 100");
 		menuItem1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().build())) {
+				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().copy().withDbName(database).build())) {
 					parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 					var query = Select.all(table, 100).generateQuery();
 					var result = sqlOperation.executeRaw(query);
@@ -172,4 +171,41 @@ public class PopupMenuItems {
 		popupMenu.add(createTablesItem(parent,database));
 		popupMenu.add(menuItem2);
 	}
+	
+	
+	public static void fillUsersPopupMenu(JPopupMenu popupMenu, Main parent, String user) {		
+		JMenuItem menuItem1 = new JMenuItem("Eliminar Usuario");
+		menuItem1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+				try (var sqlOperation = new SQLOperation(parent.getConnectionStringBuilder().withDbName("master").build())) {
+					parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					var query = Drop.user(user).generateQuery();
+					var result = sqlOperation.executeRaw(query);
+					parent.getResultReader().loadResult(result);
+					query = Drop.login(user).generateQuery();
+					result = sqlOperation.executeRaw(query);
+					parent.getResultReader().loadResult(result);
+					parent.getTreeView().loadDatabaseObjects();
+				} catch(Exception ex) {
+					parent.getResultReader().loadResult(ResultFactory.fromException(ex));
+				} finally {
+					parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				}
+            } 
+		});
+		
+		popupMenu.add(createUsersItem(parent,null));
+		popupMenu.add(menuItem1);
+	}
+	
+	public static void fillUsersSectionPopupMenu(JPopupMenu popupMenu, Main parent) {
+		popupMenu.add(createQueryItem(parent,"master"));
+		popupMenu.add(createUsersItem(parent,null));
+	}
+	
+	public static void fillDatabaseSectionPopupMenu(JPopupMenu popupMenu, Main parent) {
+		popupMenu.add(createQueryItem(parent,"master"));
+		popupMenu.add(createNewDatabaseItem(parent));
+	}
+	
 }
