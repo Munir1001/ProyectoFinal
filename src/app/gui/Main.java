@@ -28,6 +28,7 @@ public class Main {
 	private JLabel dbNameLabel;
 	private Tabs tabs;
 	private TreeView treeView;
+	private JLabel lblNewLabel;
 
 	/**
 	 * Launch the application.
@@ -82,38 +83,26 @@ public class Main {
 		JLabel lblNewLabel = new JLabel("Base de datos:");
 		
 		this.dbNameLabel = new JLabel("NULL");
+		lblNewLabel = new JLabel("");
 		GroupLayout gl_panel = new GroupLayout(panel);
-		gl_panel.setHorizontalGroup(
-			gl_panel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-						.addComponent(treeView, GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
-						.addGroup(gl_panel.createSequentialGroup()
-							.addComponent(lblNewLabel)
-							.addGap(10)
-							.addComponent(dbNameLabel, GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE))
-						.addGroup(gl_panel.createSequentialGroup()
-							.addComponent(btnNewButton_1, GroupLayout.PREFERRED_SIZE, 99, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnNewButton, GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE)))
-					.addContainerGap())
-		);
-		gl_panel.setVerticalGroup(
-			gl_panel.createParallelGroup(Alignment.LEADING)
-				.addGroup(gl_panel.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
-						.addComponent(lblNewLabel)
-						.addComponent(dbNameLabel))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
-						.addComponent(btnNewButton_1)
-						.addComponent(btnNewButton))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(treeView, GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE)
-					.addContainerGap())
-		);
+		gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel.createSequentialGroup().addContainerGap()
+						.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+								.addComponent(lblNewLabel, GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+								.addComponent(treeView, GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+								.addGroup(gl_panel.createSequentialGroup()
+										.addComponent(btnNewButton_1, GroupLayout.PREFERRED_SIZE, 99,
+												GroupLayout.PREFERRED_SIZE)
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addComponent(btnNewButton, GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE)))
+						.addContainerGap()));
+		gl_panel.setVerticalGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_panel.createSequentialGroup().addContainerGap().addComponent(lblNewLabel)
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE).addComponent(btnNewButton_1)
+								.addComponent(btnNewButton))
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(treeView, GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE).addContainerGap()));
 		
 		panel.setLayout(gl_panel);
 		
@@ -138,12 +127,13 @@ public class Main {
 	public void connect() {
 		Connector dialog = new Connector(frame);
 		dialog.setVisible(true);
-        if (!dialog.isConfigured()) {
-        	this.resultReader.loadResult(ResultFactory.fromString("Conexión cancelada"));
-        	return;
-        }
-        this.conStrGenerator = dialog.getConnectionStringBuilder();
-        this.treeView.loadDatabaseObjects();
+		if (!dialog.isConfigured()) {
+			this.resultReader.loadResult(ResultFactory.fromString("Conexión cancelada"));
+			return;
+		}
+		this.conStrGenerator = dialog.getConnectionStringBuilder();
+		this.treeView.loadDatabaseObjects();
+		this.lblNewLabel.setText(this.conStrGenerator.getUserName());
 	}
 	
 	
