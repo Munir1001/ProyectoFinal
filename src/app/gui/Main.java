@@ -2,7 +2,6 @@ package app.gui;
 
 import java.awt.EventQueue;
 
-
 import javax.swing.JFrame;
 
 import app.lib.connector.*;
@@ -22,10 +21,9 @@ public class Main {
 	private JFrame frame;
 	private JPanel panel;
 	private JButton btnNewButton_1;
-	private ConnectionStringBuilder conStrGenerator; 
+	private ConnectionStringBuilder conStrGenerator;
 	private JSplitPane splitPane;
 	private ResultReader resultReader;
-	private JLabel dbNameLabel;
 	private Tabs tabs;
 	private TreeView treeView;
 	private JLabel lblNewLabel;
@@ -60,18 +58,18 @@ public class Main {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 904, 637);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	
+
 		JSplitPane mainPane = new JSplitPane();
-		
+
 		panel = new JPanel();
-		
+
 		btnNewButton_1 = new JButton("Conectar");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				connect();
 			}
 		});
-		
+
 		JButton btnNewButton = new JButton("Refrescar");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -79,10 +77,7 @@ public class Main {
 			}
 		});
 		this.treeView = new TreeView(this);
-		
-		JLabel lblNewLabel = new JLabel("Base de datos:");
-		
-		this.dbNameLabel = new JLabel("NULL");
+
 		lblNewLabel = new JLabel("");
 		GroupLayout gl_panel = new GroupLayout(panel);
 		gl_panel.setHorizontalGroup(gl_panel.createParallelGroup(Alignment.LEADING)
@@ -103,24 +98,24 @@ public class Main {
 								.addComponent(btnNewButton))
 						.addPreferredGap(ComponentPlacement.RELATED)
 						.addComponent(treeView, GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE).addContainerGap()));
-		
+
 		panel.setLayout(gl_panel);
-		
+
 		this.tabs = new Tabs(this);
-		
+
 		resultReader = new ResultReader();
-		
+
 		splitPane = new JSplitPane();
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		splitPane.setLeftComponent(tabs);
-		
+
 		splitPane.setRightComponent(resultReader);
 		splitPane.setDividerLocation(0.9);
-		
+
 		mainPane.setLeftComponent(panel);
 		mainPane.setRightComponent(splitPane);
 		frame.getContentPane().add(mainPane);
-		
+
 		this.connect();
 	}
 
@@ -135,13 +130,7 @@ public class Main {
 		this.treeView.loadDatabaseObjects();
 		this.lblNewLabel.setText(this.conStrGenerator.getUserName());
 	}
-	
-	
-	public void setDbName(String dbName) {
-		this.dbNameLabel.setText(dbName);
-	    conStrGenerator = conStrGenerator.withDbName(dbName);
-	}
-	
+
 	public Tabs getTabs() {
 		return this.tabs;
 	}
@@ -153,11 +142,11 @@ public class Main {
 	public ResultReader getResultReader() {
 		return this.resultReader;
 	}
-	
+
 	public JFrame getFrame() {
 		return this.frame;
 	}
-	
+
 	public ConnectionStringBuilder getConnectionStringBuilder() {
 		return this.conStrGenerator;
 	}
