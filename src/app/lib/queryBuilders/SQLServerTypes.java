@@ -1,6 +1,7 @@
 package app.lib.queryBuilders;
 
 
+// Pudimos usar Enumerados, pero necesitábamos mutabilidad, así que tomamos lo que nos interesa de los enumerados
 public class SQLServerTypes {
     public static final SQLServerTypes BIT = new SQLServerTypes("BIT");
     public static final SQLServerTypes TINYINT = new SQLServerTypes("TINYINT");
