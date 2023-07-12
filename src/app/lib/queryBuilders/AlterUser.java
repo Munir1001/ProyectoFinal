@@ -11,13 +11,13 @@ public class AlterUser implements QueryBuilder {
 		this.field = field;
 		this.newValue = newValue;
 	}
-
+	
 	@Override
 	public String generateQuery(Object... params) {
 		System.out.println(String.format(template,this.login, this.field.toString(), this.newValue));
 		return String.format(template,this.login, this.field.toString(), this.newValue);
 	}
-
+		
 	public enum Fields {
 		NAME,PASSWORD
 	}

@@ -9,7 +9,7 @@ public class AlterServerRole implements QueryBuilder {
 		this.role = role;
 		this.user = user;
 	}
-
+	
 	@Override
 	public String generateQuery(Object... params) {
 		return String.format(this.template, this.role,this.user);
