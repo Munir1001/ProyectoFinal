@@ -16,13 +16,13 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.JTable;
-import javax.swing.JCheckBox;
 import java.awt.event.ActionListener;
 import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import app.lib.connector.SQLOperation;
 import app.lib.connector.ConnectionStringBuilder;
 import app.lib.queryBuilders.AlterUser;
+import app.lib.queryBuilders.AlterServerRole;
 import app.lib.queryBuilders.DefaultQuerys;
 import app.lib.queryBuilders.Login;
 import app.lib.queryBuilders.User;
@@ -32,46 +32,61 @@ import app.lib.result.Status;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import javax.swing.JComboBox;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
+import javax.swing.JTabbedPane;
+import javax.swing.JCheckBox;
+import javax.swing.SwingConstants;
 
 public class UserEditor extends JPanel {
-	private JTextField textField;
+	private JTextField loginName;
 	private JPasswordField passwordField;
 	private Main parent;
-	private JLabel loginName;
 	private ConnectionStringBuilder conStrGenerator;
 	private String user;
 	private String password;
-	private JComboBox dbcBox;
-	private JCheckBox chckbxRead;
-	private JCheckBox chckbxWrite;
-	private JCheckBox chckbxAdmin;
 	private boolean editUsername;
 	private boolean editPassword;
-	private boolean newUser;
+	private boolean modifyUser;
+	private JTable serverRolesTable;
+	private JScrollPane panel_1;
+	private JTable dbRolesTable;
+	JCheckBox windowsAuth;
+	private Object[] databases;
 
 	/**
 	 * Create the panel.
 	 */
-	public UserEditor(Main parent, boolean newUser, String username, String password,
+	@SuppressWarnings("serial")
+	public UserEditor(Main parent, boolean modifyUser, String username, String password,
 			ConnectionStringBuilder conStrGenerator) {
-		this.user = username == null ? "" : username;
+		String[] arr = username == null ? new String[] { "" } : username.split("\\\\");
+		this.user = arr[arr.length - 1];
 		this.password = password == null ? "" : password;
 		this.conStrGenerator = conStrGenerator;
 		this.parent = parent;
-		this.textField = new JTextField();
-		this.loginName = new JLabel(conStrGenerator.getUserName());
+		this.modifyUser = modifyUser;
 
+		this.loginName = new JTextField();
+		this.passwordField = new JPasswordField();
 		JLabel lblNewLabel = new JLabel("Nombre de Usuario");
 		JLabel lblNewLabel_1 = new JLabel("Contraseña");
 
-		this.textField.addKeyListener(new KeyAdapter() {
+		if (this.user != null && !this.user.equals("")) {
+			this.loginName.setText(this.user);
+		}
+
+		if (this.password != null && !this.password.equals("")) {
+			this.passwordField.setText(this.password);
+		}
+
+		this.loginName.setEditable(!modifyUser);
+		this.passwordField.setEditable(!modifyUser);
+
+		this.loginName.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-					UserEditor.this.textField.setText(UserEditor.this.user);
+					System.out.println("Hello");
+					UserEditor.this.loginName.setText(UserEditor.this.user);
 					UserEditor.this.editUsername = false;
 					return;
 				}
@@ -79,10 +94,7 @@ public class UserEditor extends JPanel {
 			}
 		});
 
-		this.textField.setColumns(10);
-
-		this.passwordField = new JPasswordField();
-
+		this.loginName.setColumns(10);
 		this.passwordField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -98,7 +110,15 @@ public class UserEditor extends JPanel {
 		JButton btnNewButton = new JButton("Guardar");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (!newUser && (UserEditor.this.editPassword || UserEditor.this.editUsername)) {
+				if ((modifyUser && editUsername && !loginName.getText().equals("")) || !modifyUser) {
+					UserEditor.this.user = loginName.getText();
+				}
+				if ((modifyUser && editPassword && !new String(passwordField.getPassword()).strip().equals(""))
+						|| !modifyUser) {
+					UserEditor.this.password = new String(passwordField.getPassword()).strip();
+				}
+
+				if (modifyUser) {
 					executeAlterUser();
 					return;
 				}
@@ -107,72 +127,89 @@ public class UserEditor extends JPanel {
 			}
 		});
 
-		JLabel lblNewLabel_3 = new JLabel("Login:");
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-		this.dbcBox = this.createComboBox();
-		dbcBox.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				String newDB = UserEditor.this.dbcBox.getSelectedItem().toString();
-				UserEditor.this.conStrGenerator.withDbName(newDB);
-			}
-		});
-		this.dbcBox.setEnabled(newUser);
+		this.windowsAuth = new JCheckBox("Usar Autenticación de Windows");
+		this.windowsAuth.setEnabled(!modifyUser);
 
-		this.chckbxRead = new JCheckBox("Lectura");
-		this.chckbxWrite = new JCheckBox("Escritura");
-		this.chckbxAdmin = new JCheckBox("Administrador");
+		windowsAuth.setVerticalAlignment(SwingConstants.TOP);
 
 		GroupLayout groupLayout = new GroupLayout(this);
-		groupLayout
-				.setHorizontalGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup().addContainerGap()
-								.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-												.addComponent(dbcBox, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-												.addComponent(lblNewLabel_1)
-												.addComponent(passwordField, GroupLayout.DEFAULT_SIZE, 209,
+		groupLayout.setHorizontalGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+				.addGroup(groupLayout.createSequentialGroup().addContainerGap()
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(
+										groupLayout.createSequentialGroup()
+												.addComponent(tabbedPane, GroupLayout.DEFAULT_SIZE, 459,
 														Short.MAX_VALUE)
-												.addComponent(textField))
-										.addComponent(lblNewLabel))
-								.addPreferredGap(ComponentPlacement.RELATED, 168, Short.MAX_VALUE)
-								.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(groupLayout.createSequentialGroup().addComponent(lblNewLabel_3)
-												.addPreferredGap(ComponentPlacement.RELATED).addComponent(loginName)
-												.addGap(1))
-										.addGroup(groupLayout.createSequentialGroup().addGap(10)
-												.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-														.addComponent(chckbxRead).addComponent(chckbxWrite)
-														.addComponent(chckbxAdmin)))
-										.addComponent(btnNewButton, Alignment.TRAILING, GroupLayout.PREFERRED_SIZE, 97,
-												GroupLayout.PREFERRED_SIZE))
-								.addContainerGap()));
+												.addContainerGap())
+								.addGroup(groupLayout.createSequentialGroup().addGroup(groupLayout
+										.createParallelGroup(Alignment.LEADING)
+										.addGroup(groupLayout.createSequentialGroup()
+												.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+														.addComponent(lblNewLabel_1)
+														.addComponent(passwordField, GroupLayout.DEFAULT_SIZE, 144,
+																Short.MAX_VALUE)
+														.addComponent(loginName))
+												.addGap(6).addComponent(windowsAuth)
+												.addPreferredGap(ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
+												.addComponent(btnNewButton, GroupLayout.PREFERRED_SIZE, 101,
+														GroupLayout.PREFERRED_SIZE)
+												.addGap(18))
+										.addGroup(groupLayout.createSequentialGroup().addComponent(lblNewLabel)
+												.addPreferredGap(ComponentPlacement.RELATED, 360, Short.MAX_VALUE)))
+										.addGap(0)))));
 		groupLayout.setVerticalGroup(groupLayout.createParallelGroup(Alignment.LEADING).addGroup(groupLayout
-				.createSequentialGroup().addContainerGap()
-				.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE).addComponent(lblNewLabel_3)
-								.addComponent(loginName))
-						.addComponent(dbcBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.PREFERRED_SIZE))
-				.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-				.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addGroup(groupLayout.createSequentialGroup().addComponent(lblNewLabel)
-								.addPreferredGap(ComponentPlacement.RELATED)
-								.addComponent(textField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup().addComponent(chckbxWrite)
-								.addPreferredGap(ComponentPlacement.RELATED).addComponent(chckbxRead)))
-				.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup().addGap(11).addComponent(lblNewLabel_1))
-						.addGroup(groupLayout.createSequentialGroup().addPreferredGap(ComponentPlacement.RELATED)
-								.addComponent(chckbxAdmin)))
+				.createSequentialGroup().addGap(22).addComponent(lblNewLabel)
 				.addPreferredGap(ComponentPlacement.RELATED)
-				.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE).addComponent(passwordField,
-						GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(btnNewButton))
-				.addGap(235)));
+				.addComponent(loginName, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+						GroupLayout.PREFERRED_SIZE)
+				.addGap(11).addComponent(lblNewLabel_1).addPreferredGap(ComponentPlacement.RELATED)
+				.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+						.addComponent(passwordField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addComponent(windowsAuth).addComponent(btnNewButton))
+				.addGap(18).addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 264, GroupLayout.PREFERRED_SIZE)
+				.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+
+		JScrollPane panel = new JScrollPane();
+		tabbedPane.addTab("Roles de Servidor", null, panel, null);
+
+		serverRolesTable = new JTable();
+		Object[] columnNames = new Object[] { "Activo", "Rol" };
+
+		DefaultTableModel model = new DefaultTableModel() {
+			@Override
+			public Class<?> getColumnClass(int columnIndex) {
+				if (columnIndex == 0) {
+					return Boolean.class; // Columna 1: CheckBox
+				} else {
+					return String.class; // Columna 2: String
+				}
+			}
+
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return column == 0;
+			}
+
+		};
+
+		for (Object o : columnNames) {
+			model.addColumn(o);
+		}
+
+		serverRolesTable.setModel(model);
+		TableColumn column0 = serverRolesTable.getColumnModel().getColumn(0);
+		column0.setCellRenderer(serverRolesTable.getDefaultRenderer(Boolean.class));
+		column0.setCellEditor(serverRolesTable.getDefaultEditor(Boolean.class));
+		panel.setViewportView(serverRolesTable);
+
+		this.loadTable(tabbedPane);
+		this.fillTableRole();
 		setLayout(groupLayout);
 
-		((AbstractDocument) textField.getDocument()).setDocumentFilter(new DocumentFilter() {
+		((AbstractDocument) loginName.getDocument()).setDocumentFilter(new DocumentFilter() {
 			@Override
 			public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
 					throws BadLocationException {
@@ -185,93 +222,276 @@ public class UserEditor extends JPanel {
 
 	}
 
-	private JComboBox createComboBox() {
-		Object[] databases = null;
-		try (var operation = new SQLOperation(this.parent.getConnectionStringBuilder().build())) {
+	private void loadTable(JTabbedPane tabbedPane) {
+		try (var operation = new SQLOperation(this.conStrGenerator.build())) {
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			var result = operation.executeRaw(DefaultQuerys.getDatabasesQuery);
 			if (result.getStatus().equals(Status.FAILURE) || result.getType().equals(ResultType.STRING)) {
 				this.parent.getResultReader().loadResult(result);
-				return new JComboBox();
+				return;
 			}
 
-			databases = result.getTable().get("name").toArray();
-			if (databases.length != 0) {
-				this.conStrGenerator.withDbName(databases[0].toString());
+			this.databases = result.getTable().get("name").toArray();
+
+			if (databases == null || databases.length == 0) {
+				return;
 			}
+
+			panel_1 = new JScrollPane();
+			tabbedPane.addTab("Roles de la Base de datos", null, panel_1, null);
+
+			dbRolesTable = new JTable();
+
+			result = operation.executeRaw(DefaultQuerys.getDBRolesQuery);
+			if (result.getStatus().equals(Status.FAILURE)) {
+				this.parent.getResultReader().loadResult(result);
+				return;
+			}
+
+			var names = result.getTable().get("name");
+
+			if (names == null || names.size() == 0) {
+				return;
+			}
+
+			names.add(0, "Base de Datos");
+
+			DefaultTableModel model = new DefaultTableModel() {
+				@Override
+				public Class<?> getColumnClass(int columnIndex) {
+					if (columnIndex == 0) {
+						return String.class; // Columna 1: String
+					} else {
+						return Boolean.class; // Columna 2: CheckBox
+					}
+				}
+
+				@Override
+				public boolean isCellEditable(int row, int column) {
+					return column != 0;
+				}
+
+			};
+
+			for (Object name : names) {
+				model.addColumn(name);
+			}
+
+			dbRolesTable.getTableHeader().setReorderingAllowed(false);
+			dbRolesTable.setModel(model);
+			for (int i = 1; i < dbRolesTable.getColumnCount(); i++) {
+				TableColumn column0 = dbRolesTable.getColumnModel().getColumn(i);
+				column0.setCellRenderer(dbRolesTable.getDefaultRenderer(Boolean.class));
+				column0.setCellEditor(dbRolesTable.getDefaultEditor(Boolean.class));
+			}
+
+			panel_1.setViewportView(dbRolesTable);
 
 		} catch (Exception e) {
 			this.parent.getResultReader().loadResult(ResultFactory.fromException(e));
 		} finally {
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
-		return new JComboBox(databases);
 	}
 
 	private void executeCreateUser() {
 		try (var operation = new SQLOperation(this.conStrGenerator.build())) {
+			StringBuilder sb = new StringBuilder();
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			String command = new Login(this.textField.getText(), new String(this.passwordField.getPassword()).strip())
-					.generateQuery();
-			var result = operation.executeRaw(command);
-			this.parent.getResultReader().loadResult(result);
+			String loginUser;
 
-			command = new User(this.textField.getText(), this.textField.getText()).generateQuery();
-			result = operation.executeRaw(command);
-			this.parent.getResultReader().loadResult(result);
-
-			if (this.chckbxWrite.isSelected()) {
-				result = operation.executeRaw(
-						String.format("EXEC sp_addrolemember 'db_datawriter', '%s';", this.textField.getText()));
-				this.parent.getResultReader().loadResult(result);
+			if (this.windowsAuth.isSelected()) {
+				loginUser = String.format("%s\\%s", System.getenv("USERDOMAIN"), this.loginName.getText());
+			} else {
+				loginUser = this.loginName.getText();
 			}
 
-			if (this.chckbxRead.isSelected()) {
-				result = operation.executeRaw(
-						String.format("EXEC sp_addrolemember 'db_datareader', '%s';", this.textField.getText()));
-				this.parent.getResultReader().loadResult(result);
+			String command = new Login(loginUser, new String(this.passwordField.getPassword()).strip(),
+					this.windowsAuth.isSelected()).generateQuery();
+
+			sb.append(command);
+			sb.append("\n");
+			sb.append("\n");
+
+			DefaultTableModel model = (DefaultTableModel) serverRolesTable.getModel();
+			int rowCount = model.getRowCount();
+
+			for (int i = 0; i < rowCount; i++) {
+				boolean assigned = (Boolean) model.getValueAt(i, 0);
+				String roleName = (String) model.getValueAt(i, 1);
+				if (assigned) {
+					command = new AlterServerRole(roleName, this.loginName.getText()).generateQuery();
+					sb.append(command);
+					sb.append("\n");
+				}
 			}
 
-			if (this.chckbxAdmin.isSelected()) {
-				result = operation.executeRaw(
-						String.format("EXEC sp_addrolemember 'db_ddladmin', '%s';", this.textField.getText()));
-				this.parent.getResultReader().loadResult(result);
+			sb.append("\n");
+
+			for (Object database : this.databases) {
+				sb.append(String.format("USE [%s];\n", database));
+				command = new User(this.loginName.getText(), loginUser).generateQuery();
+				sb.append(command);
+				sb.append("\n");
 			}
 
-			this.parent.getTreeView().loadDatabaseObjects();
+			sb.append("\n");
+
+			model = (DefaultTableModel) dbRolesTable.getModel();
+			rowCount = model.getRowCount();
+			int columnCount = model.getColumnCount();
+
+			for (int i = 0; i < rowCount; i++) {
+				String database = (String) model.getValueAt(i, 0);
+				sb.append(String.format("USE [%s];\n", database));
+
+				for (int j = 1; j < columnCount; j++) {
+					boolean assigned = (Boolean) model.getValueAt(i, j);
+					String roleName = (String) model.getColumnName(j);
+					if (assigned) {
+						sb.append(String.format("EXEC sp_addrolemember '%s', '%s';\n", roleName, this.user));
+					}
+				}
+			}
+
+			String script = sb.toString();
+			if (this.parent.getSettings().imprimirComandos) {
+				System.out.println(script);
+			}
+			var result = operation.executeRaw(script);
+			System.out.println(result.getStatus());
+
 		} catch (Exception e) {
 			this.parent.getResultReader().loadResult(ResultFactory.fromException(e));
 		} finally {
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
+
+		this.parent.getTreeView().loadDatabaseObjects();
 	}
 
 	private void executeAlterUser() {
 		try (var operation = new SQLOperation(this.conStrGenerator.build())) {
+			StringBuilder sb = new StringBuilder();
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			if (this.editUsername) {
 				AlterUser generator = new AlterUser(this.loginName.getText(), AlterUser.Fields.NAME,
-						this.textField.getText());
+						this.loginName.getText());
 				String command = generator.generateQuery();
-				var result = operation.executeRaw(command);
-				this.parent.getResultReader().loadResult(result);
+				sb.append(command);
+				sb.append("\n");
 			}
 
 			if (this.editPassword) {
 				AlterUser generator = new AlterUser(this.loginName.getText(), AlterUser.Fields.PASSWORD,
-						this.textField.getText());
+						this.loginName.getText());
 				String command = generator.generateQuery();
-				var result = operation.executeRaw(command);
-				this.parent.getResultReader().loadResult(result);
+				sb.append(command);
+				sb.append("\n");
 
 			}
 
-			this.parent.getTreeView().loadDatabaseObjects();
+			sb.append("\n");
+
+			DefaultTableModel model = (DefaultTableModel) dbRolesTable.getModel();
+			int rowCount = model.getRowCount();
+			int columnCount = model.getColumnCount();
+
+			for (int i = 0; i < rowCount; i++) {
+				String database = (String) model.getValueAt(i, 0);
+				sb.append(String.format("USE [%s];\n", database));
+
+				for (int j = 1; j < columnCount; j++) {
+					boolean assigned = (Boolean) model.getValueAt(i, j);
+					String roleName = (String) model.getColumnName(j);
+					if (!assigned) {
+						sb.append(String.format("EXEC sp_droprolemember '%s', '%s';\n", roleName, this.user));
+					} else {
+						sb.append(String.format("EXEC sp_addrolemember '%s', '%s';\n", roleName, this.user));
+					}
+				}
+
+			}
+
+			String script = sb.toString();
+			if (this.parent.getSettings().imprimirComandos) {
+				System.out.println(script);
+			}
+			var result = operation.executeRaw(script);
+			System.out.println(result.getStatus());
+
 		} catch (Exception e) {
 			this.parent.getResultReader().loadResult(ResultFactory.fromException(e));
 		} finally {
 			this.parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 
+		this.parent.getTreeView().loadDatabaseObjects();
+	}
+
+	private void fillTableRole() {
+		try {
+			try (var operation = new SQLOperation(this.conStrGenerator.build())) {
+				parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				DefaultTableModel model = (DefaultTableModel) this.serverRolesTable.getModel();
+				var result = operation.executeRaw(DefaultQuerys.getRolesQuery);
+
+				if (this.parent.getSettings().imprimirComandos) {
+					System.out.println(DefaultQuerys.getRolesQuery);
+				}
+
+				if (result.getStatus().equals(Status.FAILURE)) {
+					this.parent.getResultReader().loadResult(result);
+					return;
+				}
+
+				var names = result.getTable().get("name");
+
+				for (int i = 0; i < names.size(); i++) {
+					model.addRow(new Object[] { false, names.get(i) });
+				}
+
+				model = (DefaultTableModel) this.dbRolesTable.getModel();
+
+				for (Object database : this.databases) {
+					Object[] row = new Object[model.getColumnCount()];
+					row[0] = database;
+					for (int i = 1; i < row.length; i++) {
+						row[i] = false;
+					}
+					model.addRow(row);
+				}
+
+				this.dbRolesTable.getTableHeader().setReorderingAllowed(false);
+			}
+
+			DefaultTableModel model = (DefaultTableModel) this.dbRolesTable.getModel();
+			if (this.modifyUser) {
+				for (int i = 0; i < this.databases.length; i++) {
+					ConnectionStringBuilder constr = this.conStrGenerator.copy().withDbName((String) databases[i]);
+					try (SQLOperation op = new SQLOperation(constr.build())) {
+						var result = op.executeRaw(String.format(DefaultQuerys.getUserDBRolesQuery, this.user));
+						if (result.getStatus().equals(Status.FAILURE)) {
+							this.parent.getResultReader().loadResult(result);
+							return;
+						}
+
+						var names = result.getTable().get("name");
+						for (int j = 0; j < names.size(); j++) {
+							for (int k = 1; k < model.getColumnCount(); k++) {
+								if (model.getColumnName(k).equals((String) names.get(j))) {
+									model.setValueAt(true, i, k);
+								}
+							}
+						}
+						this.dbRolesTable.revalidate();
+					}
+				}
+			}
+		} catch (Exception e) {
+			parent.getResultReader().loadResult(ResultFactory.fromException(e));
+		} finally {
+			parent.getFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		}
 	}
 }
